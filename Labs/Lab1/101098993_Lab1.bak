@@ -1,0 +1,17 @@
+#lang racket
+
+; EXERCISE 1
+
+(define (sum-coins pennies nickels dimes quarters)
+  (+ (pennies-sum pennies) (nickels-sum nickels)
+     (dimes-sum dimes) (quarters-sum quarters))
+  )
+
+
+(define (pennies-sum pennies) (* pennies 1))
+(define (nickels-sum nickels) (* nickels 5))
+(define (dimes-sum dimes) (* dimes 10))
+(define (quarters-sum quarters) (* quarters 25))
+
+; EXERCISE 2
+
