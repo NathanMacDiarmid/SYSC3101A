@@ -19,10 +19,7 @@
 ; EXERCISE 3
 
 (define (balance bank-balance)
-  (cond
-    [(or (< bank-balance 1000) (= bank-balance 1000)) (+(exact-floor (* bank-balance 0.04)) bank-balance)]
-    [(or (< bank-balance 5000) (= bank-balance 5000)) (+ (exact-floor (* bank-balance 0.045)) bank-balance)]
-    [(+ (exact-floor (* bank-balance 0.05)) bank-balance)])
+  (+ (interest bank-balance) bank-balance)
   )
 
 ; EXERCISE 4
