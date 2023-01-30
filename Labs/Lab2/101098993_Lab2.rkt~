@@ -28,10 +28,7 @@
 ; Exercise 3
 
 (define (convert digits)
-  (cond
-    [(empty? digits) 0]
-    [(+ (car digits) (* (convert (cdr digits)) 10))]
-    )
+  (car (cdr digits))
   )
 
 ; Exercise 4
