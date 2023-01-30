@@ -36,4 +36,23 @@
 
 ; Exercise 4
 
+(define (convertFC temps)
+  (cond
+    [(empty? temps)  `()]
+    [(cons (convertFCFormula(car temps)) (convertFC (cdr temps)))]
+    )
+  )
+
+(define (convertFCFormula temp)
+  (* (- temp 32) 5/9)
+  )
+
 ; Exercise 5
+
+(define (eliminate-threshold numbers threshold)
+  (cond
+    [(empty? numbers)  null]
+    [(<= (car numbers) threshold) (cons (car numbers) (eliminate-threshold (cdr numbers) threshold))]
+    [(eliminate-threshold (cdr numbers) threshold)]
+    )
+  )
