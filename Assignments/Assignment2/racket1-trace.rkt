@@ -90,6 +90,12 @@
          (displayln "quote? is true")
          ;; Changed this line to an if statement and throw an error if more arguments are given
          (if (> (length exp) 2) (error "Cannot have multiple arguments") (cadr exp)))
+
+        ;; Added the map-exp? to evaluate a map function
+        ((map-exp? exp)
+         (displayln "map? is true")
+         (eval-1 (cdr exp))
+         )
         
         ((if-exp? exp)
          (displayln "if-exp? is true")
@@ -169,6 +175,8 @@
   (lambda (exp) (and (pair? exp) (eq? (car exp) type))))
 
 (define quote-exp? (exp-checker 'quote))
+;; Added in the map-exp? checker function
+(define map-exp? (exp-checker 'map-1))
 (define if-exp? (exp-checker 'if))
 (define lambda-exp? (exp-checker 'lambda))
 
