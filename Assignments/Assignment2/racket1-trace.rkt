@@ -94,7 +94,13 @@
         ;; Added the map-exp? to evaluate a map function
         ((map-exp? exp)
          (displayln "map? is true")
-         (eval-1 (cdr exp))
+         (map (eval (cadr exp)) (eval (caddr exp)))
+         )
+
+        ;; Added the and-exp? to evaluate an and function
+        ((and-exp? exp)
+         (displayln "and? is true")
+         (eval exp)
          )
         
         ((if-exp? exp)
@@ -175,8 +181,9 @@
   (lambda (exp) (and (pair? exp) (eq? (car exp) type))))
 
 (define quote-exp? (exp-checker 'quote))
-;; Added in the map-exp? checker function
+;; Added in the map-exp? and and-exp? checker functions
 (define map-exp? (exp-checker 'map-1))
+(define and-exp? (exp-checker 'and))
 (define if-exp? (exp-checker 'if))
 (define lambda-exp? (exp-checker 'lambda))
 

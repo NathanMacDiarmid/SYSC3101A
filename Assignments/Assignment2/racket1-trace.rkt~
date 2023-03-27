@@ -1,9 +1,14 @@
 #lang racket
 
-;; Modified Assignment 2
-;; Added quote, map and and functions in eval-1
-;; Nathan MacDiarmid
-;; 101098993
+;; racket1-trace.rkt: Contains the interpreter from racket-1.rkt, with modifcations
+;; to help us trace the execution of the interpreter.
+;;
+;; 1. display expressions inserted in eval-1, apply-1 and substitute.
+;; 2. Modified apply-1: when a lambda is applied, the interpreter now displays
+;;    the expression returned by substitute (the body of the lambdae, with the
+;;    formal parameters replaced by the arguments).
+;;
+;; Last edit: Mar. 28, 2017, dlb 
 
 ;;(require (planet dyoo/simply-scheme))
 ;;(provide (all-defined-out))
@@ -69,27 +74,45 @@
 ;; subexpressions.  We call APPLY-1 to handle the actual procedure invocation.
 
 (define (eval-1 exp)
-  (cond ((constant? exp) exp)
-    ((symbol? exp) (eval exp))  ; use underlying Racket's EVAL
-    ((quote-exp? exp)
-     ;; Changed this line to an if statement and throw an error if more arguments are given
-     (if (> (length exp) 2) (error "Cannot have multiple arguments") (cadr exp)))
-    ;; Added the map-exp? to evaluate a map function
-    ((map-exp? exp)
-     (map (eval (cadr exp)) (eval (caddr exp))) ;; evaluates the expression using the built in map function
-     )
-    ;; Added the and-exp? to evaluate an and function
-    ((and-exp? exp)
-     (eval exp) ;; evaluates the expression witht the built in and function
-     )
-    ((if-exp? exp)
-     (if (eval-1 (cadr exp))
-         (eval-1 (caddr exp))
-         (eval-1 (cadddr exp))))
-    ((lambda-exp? exp) exp)
-    ((pair? exp) (apply-1 (eval-1 (car exp))      ; eval the operator
-                  (map eval-1 (cdr exp))))
-    (else (error "bad expr: " exp))))
+  ; display expressions added. -- dlb
+  (display "Executing eval-1, exp = ")
+  (displayln exp)
+  
+  (cond ((constant? exp)
+         (displayln "constant? is true")
+         exp)
+        
+        ((symbol? exp)
+         (displayln "symbol? is true")
+         (eval exp))  ; use underlying Racket's EVAL
+
+        ((quote-exp? exp)
+         (displayln "quote? is true")
+         ;; Changed this line to an if statement and throw an error if more arguments are given
+         (if (> (length exp) 2) (error "Cannot have multiple arguments") (cadr exp)))
+
+        ;; Added the map-exp? to evaluate a map function
+        ((map-exp? exp)
+         (displayln "map? is true")
+         (eval-1 (cdr exp))
+         )
+        
+        ((if-exp? exp)
+         (displayln "if-exp? is true")
+         (if (eval-1 (cadr exp))   ; use underlying Racket's IF
+             (eval-1 (caddr exp))
+             (eval-1 (cadddr exp))))
+        
+        ((lambda-exp? exp)
+         (displayln "lambda-exp? is true")
+         exp)
+
+        ((pair? exp)
+         (displayln "pair? is true")
+         (apply-1 (eval-1 (car exp))      ; eval the operator
+                  (map eval-1 (cdr exp))))        
+        
+        (else (error "bad expr: " exp))))
 
 
 ;; Comments on APPLY-1:
@@ -110,14 +133,37 @@
 ;; an expression which we can then evaluate with EVAL-1.
 
 (define (apply-1 proc args)
+  ; display expressions added. -- dlb
+  (display "Executing apply-1, proc = ")
+  (display proc)
+  (display " args = ")
+  (displayln args)
+  
   (cond ((procedure? proc)  ; use underlying Racket's APPLY
-     (apply proc args))
-    ((lambda-exp? proc)
-     (eval-1 (substitute (caddr proc)   ; the body
-                 (cadr proc)    ; the formal parameters
-                 args           ; the actual arguments
-                 '())))     ; bound-vars, see below
-    (else (error "bad proc: " proc))))
+         (displayln "procedure? is true")
+         (apply proc args))
+        
+        ((lambda-exp? proc)
+         (displayln "lambda-exp? is true")
+
+         ;; Rewrote the call to eval-1, nesting it in a let expression, so that we can
+         ;; display the expression returned by substitute before it's evaluated. -- dlb
+         ;;
+         ;;         (eval-1 (substitute (caddr proc)   ; the body
+         ;;                             (cadr proc)    ; the formal parameters
+         ;;                             args           ; the actual arguments
+         ;;                             '())))         ; bound-vars, see below         
+
+         (let ([s (substitute (caddr proc)   ; the body
+                              (cadr proc)     ; the formal parameters
+                              args            ; the actual arguments
+                              '())])          ; bound-vars, see below
+           (begin
+             (display "substitute returned ")
+             (displayln s)
+             (eval-1 s))))       
+        
+        (else (error "bad proc: " proc))))
 
 
 ;; Some trivial helper procedures:
@@ -128,10 +174,9 @@
 (define (exp-checker type)
   (lambda (exp) (and (pair? exp) (eq? (car exp) type))))
 
-;; Added in the map-exp? and and-exp? checker functions
-(define map-exp? (exp-checker 'map-1))
-(define and-exp? (exp-checker 'and))
 (define quote-exp? (exp-checker 'quote))
+;; Added in the map-exp? checker function
+(define map-exp? (exp-checker 'map-1))
 (define if-exp? (exp-checker 'if))
 (define lambda-exp? (exp-checker 'lambda))
 
@@ -190,29 +235,39 @@
 ;; procedures shouldn't be quoted.
 
 (define (substitute exp params args bound)
+  ; display expressions added. -- dlb
+  (display "Executing substitute, exp = ")
+  (display exp)
+  (display " params = ")
+  (display params)
+  (display " args = ")
+  (display args)
+  (display " bound = ")
+  (displayln bound)
+  
   (cond ((constant? exp) exp)
-    ((symbol? exp)
-     (if (memq exp bound)
-         exp
-         (lookup exp params args)))
-    ((quote-exp? exp) exp)
-    ((lambda-exp? exp)
-     (list 'lambda
-           (cadr exp)
-           (substitute (caddr exp) params args (append bound (cadr exp)))))
-    (else (map (lambda (subexp) (substitute subexp params args bound))
-           exp))))
+        ((symbol? exp)
+         (if (memq exp bound)
+             exp
+             (lookup exp params args)))
+        ((quote-exp? exp) exp)
+        ((lambda-exp? exp)
+         (list 'lambda
+               (cadr exp)
+               (substitute (caddr exp) params args (append bound (cadr exp)))))
+        (else (map (lambda (subexp) (substitute subexp params args bound))
+                   exp))))
 
 (define (lookup name params args)
   (cond ((null? params) name)
-    ((eq? name (car params)) (maybe-quote (car args)))
-    (else (lookup name (cdr params) (cdr args)))))
+        ((eq? name (car params)) (maybe-quote (car args)))
+        (else (lookup name (cdr params) (cdr args)))))
 
 (define (maybe-quote value)
   (cond ((lambda-exp? value) value)
-    ((constant? value) value)
-    ((procedure? value) value)  ; real Racket primitive procedure
-    (else (list 'quote value))))
+        ((constant? value) value)
+        ((procedure? value) value)  ; real Racket primitive procedure
+        (else (list 'quote value))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
