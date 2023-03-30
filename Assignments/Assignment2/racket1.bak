@@ -1,5 +1,10 @@
 #lang racket
 
+;; Modified Assignment 2
+;; Added quote, map and and functions in eval-1
+;; Nathan MacDiarmid
+;; 101098993
+
 ;;(require (planet dyoo/simply-scheme))
 ;;(provide (all-defined-out))
 
@@ -66,7 +71,17 @@
 (define (eval-1 exp)
   (cond ((constant? exp) exp)
     ((symbol? exp) (eval exp))  ; use underlying Racket's EVAL
-    ((quote-exp? exp) (cadr exp))
+    ((quote-exp? exp)
+     ;; Changed this line to an if statement and throw an error if more arguments are given
+     (if (> (length exp) 2) (error "Cannot have multiple arguments") (cadr exp)))
+    ;; Added the map-exp? to evaluate a map function
+    ((map-exp? exp)
+     (map (eval (cadr exp)) (eval (caddr exp))) ;; evaluates the expression using the built in map function
+     )
+    ;; Added the and-exp? to evaluate an and function
+    ((and-exp? exp)
+     (eval exp) ;; evaluates the expression witht the built in and function
+     )
     ((if-exp? exp)
      (if (eval-1 (cadr exp))
          (eval-1 (caddr exp))
@@ -113,6 +128,9 @@
 (define (exp-checker type)
   (lambda (exp) (and (pair? exp) (eq? (car exp) type))))
 
+;; Added in the map-exp? and and-exp? checker functions
+(define map-exp? (exp-checker 'map-1))
+(define and-exp? (exp-checker 'and))
 (define quote-exp? (exp-checker 'quote))
 (define if-exp? (exp-checker 'if))
 (define lambda-exp? (exp-checker 'lambda))

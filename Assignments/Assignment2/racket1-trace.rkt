@@ -94,9 +94,11 @@
         ;; Added the map-exp? to evaluate a map function
         ((map-exp? exp)
          (displayln "map? is true")
-         (map (eval (cadr exp)) (eval (caddr exp)))
-         )
-
+         (cond
+           [(= (length exp) 3) (map (eval (cadr exp)) (eval (caddr exp)))]
+           [(= (length exp) 4) (map (eval (cadr exp)) (eval (caddr exp)) (eval (cadddr exp)))]
+           ))
+        
         ;; Added the and-exp? to evaluate an and function
         ((and-exp? exp)
          (displayln "and? is true")
